@@ -1,0 +1,12 @@
+# Maven build output
+target/
+
+# Local credentials (never commit real secrets)
+src/main/resources/db.properties
+.env
+.env.local
+
+# Backup / temp files
+*.bak
+*.log
+.DS_Store
