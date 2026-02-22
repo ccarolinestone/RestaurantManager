@@ -1,0 +1,52 @@
+package com.example.restaurant.controller;
+
+import com.example.restaurant.model.Location;
+import com.example.restaurant.service.LocationService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/locations")
+public class LocationController {
+
+    private final LocationService service;
+
+    public LocationController(LocationService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public List<Location> findAll() {
+        return service.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Location> get(@PathVariable Integer id) {
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Location> create(@RequestBody Location loc) {
+        Location saved = service.create(loc);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Location> update(@PathVariable Integer id, @RequestBody Location loc) {
+        return service.update(id, loc)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        if (!service.delete(id)) return ResponseEntity.notFound().build();
+        return ResponseEntity.noContent().build();
+    }
+}
+
+
