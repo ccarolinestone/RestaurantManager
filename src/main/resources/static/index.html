@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Manager — Web Client</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+
+        header { background: #2c3e50; color: white; padding: 20px 30px; }
+        header h1 { font-size: 24px; }
+        header p { font-size: 14px; color: #bdc3c7; margin-top: 4px; }
+
+        .api-bar { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+        .api-bar label { font-size: 13px; font-weight: 600; }
+        .api-bar input { padding: 8px 14px; border: none; border-radius: 4px; font-size: 14px; width: 320px; font-family: monospace; }
+        .api-bar input:focus { outline: 2px solid #3498db; }
+
+        .alert { padding: 12px 20px; margin: 12px 30px; border-radius: 6px; font-size: 14px; display: none; }
+        .alert.show { display: block; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; white-space: pre-wrap; }
+
+        .tabs { display: flex; flex-wrap: wrap; background: #34495e; padding: 0 30px; }
+        .tabs button { background: none; border: none; color: #bdc3c7; padding: 12px 20px; font-size: 14px; font-weight: 500; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; font-family: inherit; }
+        .tabs button:hover { color: white; background: rgba(255,255,255,0.05); }
+        .tabs button.active { color: white; border-bottom-color: #3498db; }
+
+        .tab-panel { display: none; padding: 20px 30px; }
+        .tab-panel.active { display: block; }
+
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; overflow: hidden; }
+        .card-header { background: #f8f9fa; padding: 14px 20px; border-bottom: 1px solid #e9ecef; font-weight: 600; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+        .search-bar { display: flex; gap: 10px; padding: 14px 20px; align-items: flex-end; flex-wrap: wrap; border-bottom: 1px solid #e9ecef; }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        .field label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; }
+        .field input, .field select { padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: inherit; }
+        .field input { width: 120px; }
+        .field select { width: 220px; }
+        .field input:focus, .field select:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.2); }
+
+        .search-info { padding: 8px 20px; background: #d1ecf1; color: #0c5460; font-size: 13px; border-bottom: 1px solid #bee5eb; display: none; }
+
+        .form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; padding: 16px 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; }
+        .form-group input, .form-group select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.2); }
+        .form-actions { padding: 0 20px 16px; }
+
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; color: white; padding: 4px 10px; font-size: 12px; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-edit { background: #f39c12; color: white; padding: 4px 10px; font-size: 12px; }
+        .btn-edit:hover { background: #e67e22; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .btn-search { background: #17a2b8; color: white; }
+        .btn-search:hover { background: #138496; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #f8f9fa; text-align: left; padding: 10px 14px; border-bottom: 2px solid #dee2e6; font-weight: 600; font-size: 13px; }
+        td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+        tr:hover td { background: #f8f9fa; }
+        .table-wrapper { overflow-x: auto; }
+        .actions-cell { display: flex; gap: 6px; }
+        .empty-msg { padding: 30px; text-align: center; color: #999; font-size: 14px; }
+        .record-count { font-weight: 400; color: #888; font-size: 14px; }
+
+        .edit-row { display: none; }
+        .edit-row.show { display: table-row; }
+        .edit-row td { background: #fffef5; }
+        .edit-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .edit-form input, .edit-form select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; font-family: inherit; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Restaurant Manager</h1>
+    <p>Standalone Web Client &mdash; Calls REST API via JavaScript fetch()</p>
+    <div class="api-bar">
+        <label>API Base URL:</label>
+        <input type="text" id="baseUrl" value="http://localhost:8080">
+        <button class="btn btn-primary" onclick="fetchAllTables()">Fetch All</button>
+        <button class="btn btn-secondary" onclick="clearAllTables()">Clear Tables</button>
+    </div>
+</header>
+
+<div id="alertBox" class="alert"></div>
+
+<div class="tabs">
+    <button class="active" onclick="showTab('locations',this)">Locations</button>
+    <button onclick="showTab('restaurants',this)">Restaurants</button>
+    <button onclick="showTab('wanttotry',this)">Want To Try</button>
+    <button onclick="showTab('havetried',this)">Have Tried</button>
+    <button onclick="showTab('ratings',this)">Ratings</button>
+    <button onclick="showTab('experiences',this)">Experiences</button>
+    <button onclick="showTab('dishes',this)">Dishes</button>
+</div>
+
+<!-- LOCATIONS -->
+<div class="tab-panel active" id="locations">
+    <div class="card">
+        <div class="card-header">Add New Location</div>
+        <div class="form-row">
+            <div class="form-group"><label>City</label><input type="text" id="loc-city" placeholder="e.g. Columbia"></div>
+            <div class="form-group"><label>State</label><input type="text" id="loc-state" placeholder="e.g. SC" maxlength="2"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="createLocation()">Create</button></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span>Locations <span class="record-count" id="loc-count"></span></span></div>
+        <div class="search-bar">
+            <div class="field"><label>Search by ID</label><input type="number" id="loc-search-id" min="1" placeholder="ID"></div>
+            <button class="btn btn-search" onclick="searchLocation()">Search</button>
+            <button class="btn btn-secondary" onclick="fetchLocations()">Show All</button>
+        </div>
+        <div id="loc-search-info" class="search-info"></div>
+        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>City</th><th>State</th><th>Actions</th></tr></thead><tbody id="loc-table"></tbody></table></div>
+    </div>
+</div>
+
+<!-- RESTAURANTS -->
+<div class="tab-panel" id="restaurants">
+    <div class="card">
+        <div class="card-header">Add New Restaurant</div>
+        <div class="form-row">
+            <div class="form-group"><label>Name</label><input type="text" id="rest-name" placeholder="e.g. Joe's Diner"></div>
+            <div class="form-group"><label>Type</label><input type="text" id="rest-type" placeholder="e.g. Casual"></div>
+            <div class="form-group"><label>Cuisine</label><input type="text" id="rest-cuisine" placeholder="e.g. Italian"></div>
+            <div class="form-group"><label>Location</label><select id="rest-loc"></select></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="createRestaurant()">Create</button></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span>Restaurants <span class="record-count" id="rest-count"></span></span></div>
+        <div class="search-bar">
+            <div class="field"><label>Search by ID</label><input type="number" id="rest-search-id" min="1" placeholder="ID"></div>
+            <div class="field"><label>Filter by Location</label><select id="rest-filter-loc"><option value="">All</option></select></div>
+            <button class="btn btn-search" onclick="searchRestaurant()">Search</button>
+            <button class="btn btn-secondary" onclick="fetchRestaurants()">Show All</button>
+        </div>
+        <div id="rest-search-info" class="search-info"></div>
+        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Cuisine</th><th>Location</th><th>Actions</th></tr></thead><tbody id="rest-table"></tbody></table></div>
+    </div>
+</div>
+
+<!-- WANT TO TRY -->
+<div class="tab-panel" id="wanttotry">
+    <div class="card">
+        <div class="card-header">Add New Want To Try</div>
+        <div class="form-row">
+            <div class="form-group"><label>Restaurant</label><select id="wtt-rest"></select></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="createWantToTry()">Create</button></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span>Want To Try <span class="record-count" id="wtt-count"></span></span></div>
+        <div class="search-bar">
+            <div class="field"><label>Search by ID</label><input type="number" id="wtt-search-id" min="1" placeholder="ID"></div>
+            <div class="field"><label>Filter by Restaurant</label><select id="wtt-filter-rest"><option value="">All</option></select></div>
+            <button class="btn btn-search" onclick="searchWantToTry()">Search</button>
+            <button class="btn btn-secondary" onclick="fetchWantToTry()">Show All</button>
+        </div>
+        <div id="wtt-search-info" class="search-info"></div>
+        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Restaurant</th><th>Actions</th></tr></thead><tbody id="wtt-table"></tbody></table></div>
+    </div>
+</div>
+
+<!-- HAVE TRIED -->
+<div class="tab-panel" id="havetried">
+    <div class="card">
+        <div class="card-header">Add New Have Tried</div>
+        <div class="form-row">
+            <div class="form-group"><label>Restaurant</label><select id="ht-rest"></select></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="createHaveTried()">Create</button></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span>Have Tried <span class="record-count" id="ht-count"></span></span></div>
+        <div class="search-bar">
+            <div class="field"><label>Search by ID</label><input type="number" id="ht-search-id" min="1" placeholder="ID"></div>
+            <div class="field"><label>Filter by Restaurant</label><select id="ht-filter-rest"><option value="">All</option></select></div>
+            <button class="btn btn-search" onclick="searchHaveTried()">Search</button>
+            <button class="btn btn-secondary" onclick="fetchHaveTried()">Show All</button>
+        </div>
+        <div id="ht-search-info" class="search-info"></div>
+        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Restaurant</th><th>Actions</th></tr></thead><tbody id="ht-table"></tbody></table></div>
+    </div>
+</div>
+
+<!-- RATINGS -->
+<div class="tab-panel" id="ratings">
+    <div class="card">
+        <div class="card-header">Add New Rating</div>
+        <div class="form-row">
+            <div class="form-group"><label>Have Tried</label><select id="rat-ht"></select></div>
+            <div class="form-group"><label>Food Rating (1-5)</label><input type="number" id="rat-food" min="1" max="5"></div>
+            <div class="form-group"><label>Vibe Rating (1-5)</label><input type="number" id="rat-vibe" min="1" max="5"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="rat-desc" placeholder="Optional"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="createRating()">Create</button></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span>Ratings <span class="record-count" id="rat-count"></span></span></div>
+        <div class="search-bar">
+            <div class="field"><label>Search by ID</label><input type="number" id="rat-search-id" min="1" placeholder="ID"></div>
+            <div class="field"><label>Filter by Have Tried</label><select id="rat-filter-ht"><option value="">All</option></select></div>
+            <button class="btn btn-search" onclick="searchRating()">Search</button>
+            <button class="btn btn-secondary" onclick="fetchRatings()">Show All</button>
+        </div>
+        <div id="rat-search-info" class="search-info"></div>
+        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Have Tried</th><th>Food</th><th>Vibe</th><th>Description</th><th>Actions</th></tr></thead><tbody id="rat-table"></tbody></table></div>
+    </div>
+</div>
+
+<!-- EXPERIENCES -->
+<div class="tab-panel" id="experiences">
+    <div class="card">
+        <div class="card-header">Add New Experience</div>
+        <div class="form-row">
+            <div class="form-group"><label>Have Tried</label><select id="exp-ht"></select></div>
+            <div class="form-group"><label>Date</label><input type="date" id="exp-date"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="exp-desc" placeholder="Describe your experience"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="createExperience()">Create</button></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span>Experiences <span class="record-count" id="exp-count"></span></span></div>
+        <div class="search-bar">
+            <div class="field"><label>Search by ID</label><input type="number" id="exp-search-id" min="1" placeholder="ID"></div>
+            <div class="field"><label>Filter by Have Tried</label><select id="exp-filter-ht"><option value="">All</option></select></div>
+            <button class="btn btn-search" onclick="searchExperience()">Search</button>
+            <button class="btn btn-secondary" onclick="fetchExperiences()">Show All</button>
+        </div>
+        <div id="exp-search-info" class="search-info"></div>
+        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Have Tried</th><th>Date</th><th>Description</th><th>Actions</th></tr></thead><tbody id="exp-table"></tbody></table></div>
+    </div>
+</div>
+
+<!-- DISHES -->
+<div class="tab-panel" id="dishes">
+    <div class="card">
+        <div class="card-header">Add New Dish</div>
+        <div class="form-row">
+            <div class="form-group"><label>Have Tried</label><select id="dish-ht"></select></div>
+            <div class="form-group"><label>Dish Name</label><input type="text" id="dish-name" placeholder="e.g. Margherita Pizza"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="dish-desc" placeholder="Describe the dish"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="createDish()">Create</button></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span>Dishes <span class="record-count" id="dish-count"></span></span></div>
+        <div class="search-bar">
+            <div class="field"><label>Search by ID</label><input type="number" id="dish-search-id" min="1" placeholder="ID"></div>
+            <div class="field"><label>Filter by Have Tried</label><select id="dish-filter-ht"><option value="">All</option></select></div>
+            <button class="btn btn-search" onclick="searchDish()">Search</button>
+            <button class="btn btn-secondary" onclick="fetchDishes()">Show All</button>
+        </div>
+        <div id="dish-search-info" class="search-info"></div>
+        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Have Tried</th><th>Dish Name</th><th>Description</th><th>Actions</th></tr></thead><tbody id="dish-table"></tbody></table></div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function base() { return document.getElementById('baseUrl').value.replace(/\/+$/, ''); }
+
+function showAlert(msg, type) {
+    const box = document.getElementById('alertBox');
+    box.className = 'alert show alert-' + type;
+    box.textContent = msg;
+    setTimeout(() => box.classList.remove('show'), 6000);
+}
+
+function showTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+}
+
+function toggleEdit(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) row.classList.toggle('show');
+}
+
+function showSearchInfo(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.style.display = 'block';
+}
+function hideSearchInfo(id) { document.getElementById(id).style.display = 'none'; }
+
+/**
+ * Core fetch wrapper — ALL API calls go through this function.
+ * Every request uses the fetch() API to call the REST controllers.
+ */
+async function api(path, options = {}) {
+    const url = base() + path;
+    console.log('fetch() → ' + (options.method || 'GET') + ' ' + url);
+    const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        ...options
+    });
+    if (res.status === 204) return null;
+    if (res.status === 404) return null;
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(res.status + ': ' + text);
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+}
+
+// Cached data for dropdown menus
+let allLocations = [], allRestaurants = [], allHaveTried = [];
+
+function locLabel(l) { return l.id + ' - ' + l.city + ', ' + l.state; }
+function restLabel(r) { return r.id + ' - ' + r.restaurantName; }
+function htLabel(h) { return h.id + ' - ' + (h.restaurant ? h.restaurant.restaurantName : 'N/A'); }
+
+function fillSelect(id, items, labelFn) {
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="">Select...</option>';
+    items.forEach(i => { const o = document.createElement('option'); o.value = i.id; o.textContent = labelFn(i); el.appendChild(o); });
+}
+function fillFilter(id, items, labelFn) {
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="">All</option>';
+    items.forEach(i => { const o = document.createElement('option'); o.value = i.id; o.textContent = labelFn(i); el.appendChild(o); });
+}
+
+async function refreshDropdowns() {
+    try { allLocations = await api('/api/locations') || []; } catch(e) { allLocations = []; }
+    try { allRestaurants = await api('/api/restaurants') || []; } catch(e) { allRestaurants = []; }
+    try { allHaveTried = await api('/api/havetried') || []; } catch(e) { allHaveTried = []; }
+
+    fillSelect('rest-loc', allLocations, locLabel);
+    fillFilter('rest-filter-loc', allLocations, locLabel);
+    fillSelect('wtt-rest', allRestaurants, restLabel);
+    fillFilter('wtt-filter-rest', allRestaurants, restLabel);
+    fillSelect('ht-rest', allRestaurants, restLabel);
+    fillFilter('ht-filter-rest', allRestaurants, restLabel);
+    fillSelect('rat-ht', allHaveTried, htLabel);
+    fillFilter('rat-filter-ht', allHaveTried, htLabel);
+    fillSelect('exp-ht', allHaveTried, htLabel);
+    fillFilter('exp-filter-ht', allHaveTried, htLabel);
+    fillSelect('dish-ht', allHaveTried, htLabel);
+    fillFilter('dish-filter-ht', allHaveTried, htLabel);
+}
+
+// ============================================================
+// FETCH ALL / CLEAR ALL
+// ============================================================
+async function fetchAllTables() {
+    try {
+        await refreshDropdowns();
+        await Promise.all([fetchLocations(), fetchRestaurants(), fetchWantToTry(), fetchHaveTried(), fetchRatings(), fetchExperiences(), fetchDishes()]);
+        showAlert('All data loaded successfully from ' + base(), 'success');
+    } catch(e) { showAlert('Error loading data: ' + e.message, 'error'); }
+}
+
+function clearAllTables() {
+    ['loc','rest','wtt','ht','rat','exp','dish'].forEach(p => {
+        document.getElementById(p + '-table').innerHTML = '';
+        document.getElementById(p + '-count').textContent = '';
+    });
+    showAlert('Tables cleared.', 'success');
+}
+
+// ============================================================
+// LOCATIONS — get all, get by id, create, update, delete
+// ============================================================
+async function fetchLocations() {
+    hideSearchInfo('loc-search-info');
+    renderLocations(await api('/api/locations') || []);
+}
+
+async function searchLocation() {
+    const id = document.getElementById('loc-search-id').value;
+    if (id) {
+        const item = await api('/api/locations/' + id);
+        renderLocations(item ? [item] : []);
+        showSearchInfo('loc-search-info', item ? 'Showing location with ID ' + id : 'No location found with ID ' + id);
+    } else { fetchLocations(); }
+}
+
+function renderLocations(data) {
+    document.getElementById('loc-count').textContent = '(' + data.length + ')';
+    const tbody = document.getElementById('loc-table');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">No records found.</td></tr>'; return; }
+    tbody.innerHTML = data.map(l => `
+        <tr><td>${l.id}</td><td>${l.city}</td><td>${l.state}</td>
+        <td class="actions-cell">
+            <button class="btn btn-edit" onclick="toggleEdit('edit-loc-${l.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteLocation(${l.id})">Delete</button>
+        </td></tr>
+        <tr class="edit-row" id="edit-loc-${l.id}"><td colspan="4"><div class="edit-form">
+            <input id="el-city-${l.id}" value="${l.city}" placeholder="City">
+            <input id="el-state-${l.id}" value="${l.state}" maxlength="2" placeholder="State">
+            <button class="btn btn-primary" onclick="updateLocation(${l.id})">Save</button>
+            <button class="btn btn-secondary" onclick="toggleEdit('edit-loc-${l.id}')">Cancel</button>
+        </div></td></tr>`).join('');
+}
+
+async function createLocation() {
+    try {
+        await api('/api/locations', { method: 'POST', body: JSON.stringify({ city: document.getElementById('loc-city').value, state: document.getElementById('loc-state').value }) });
+        document.getElementById('loc-city').value = ''; document.getElementById('loc-state').value = '';
+        showAlert('Location created.', 'success'); await refreshDropdowns(); fetchLocations();
+    } catch(e) { showAlert('Could not create location.\n\nTechnical details: ' + e.message, 'error'); }
+}
+
+async function updateLocation(id) {
+    try {
+        await api('/api/locations/' + id, { method: 'PUT', body: JSON.stringify({ city: document.getElementById('el-city-' + id).value, state: document.getElementById('el-state-' + id).value }) });
+        showAlert('Location updated.', 'success'); await refreshDropdowns(); fetchLocations();
+    } catch(e) { showAlert('Could not update location.\n\nTechnical details: ' + e.message, 'error'); }
+}
+
+async function deleteLocation(id) {
+    if (!confirm('Delete this location?')) return;
+    try {
+        await api('/api/locations/' + id, { method: 'DELETE' });
+        showAlert('Location deleted.', 'success'); await refreshDropdowns(); fetchLocations();
+    } catch(e) { showAlert('Cannot delete this location because it has restaurants linked to it. Delete those first.\n\nTechnical details: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// RESTAURANTS — get all, get by id, get by location, create, update, delete
+// ============================================================
+async function fetchRestaurants() {
+    hideSearchInfo('rest-search-info');
+    renderRestaurants(await api('/api/restaurants') || []);
+}
+
+async function searchRestaurant() {
+    const id = document.getElementById('rest-search-id').value;
+    const locId = document.getElementById('rest-filter-loc').value;
+    if (id) {
+        const item = await api('/api/restaurants/' + id);
+        renderRestaurants(item ? [item] : []);
+        showSearchInfo('rest-search-info', item ? 'Showing restaurant with ID ' + id : 'Not found');
+    } else if (locId) {
+        renderRestaurants(await api('/api/restaurants/by-location/' + locId) || []);
+        showSearchInfo('rest-search-info', 'Showing restaurants for location ID ' + locId);
+    } else { fetchRestaurants(); }
+}
+
+function renderRestaurants(data) {
+    document.getElementById('rest-count').textContent = '(' + data.length + ')';
+    const tbody = document.getElementById('rest-table');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No records found.</td></tr>'; return; }
+    tbody.innerHTML = data.map(r => {
+        const locName = r.location ? r.location.city + ', ' + r.location.state : 'N/A';
+        const locId = r.location ? r.location.id : '';
+        return `
+        <tr><td>${r.id}</td><td>${r.restaurantName}</td><td>${r.type || ''}</td><td>${r.cuisine || ''}</td><td>${locName}</td>
+        <td class="actions-cell">
+            <button class="btn btn-edit" onclick="toggleEdit('edit-rest-${r.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button>
+        </td></tr>
+        <tr class="edit-row" id="edit-rest-${r.id}"><td colspan="6"><div class="edit-form">
+            <input id="er-name-${r.id}" value="${r.restaurantName}" placeholder="Name">
+            <input id="er-type-${r.id}" value="${r.type || ''}" placeholder="Type">
+            <input id="er-cuisine-${r.id}" value="${r.cuisine || ''}" placeholder="Cuisine">
+            <select id="er-loc-${r.id}">${allLocations.map(l => '<option value="'+l.id+'" '+(l.id==locId?'selected':'')+'>'+locLabel(l)+'</option>').join('')}</select>
+            <button class="btn btn-primary" onclick="updateRestaurant(${r.id})">Save</button>
+            <button class="btn btn-secondary" onclick="toggleEdit('edit-rest-${r.id}')">Cancel</button>
+        </div></td></tr>`;
+    }).join('');
+}
+
+async function createRestaurant() {
+    try {
+        await api('/api/restaurants', { method: 'POST', body: JSON.stringify({ restaurantName: document.getElementById('rest-name').value, type: document.getElementById('rest-type').value, cuisine: document.getElementById('rest-cuisine').value, location: { id: parseInt(document.getElementById('rest-loc').value) } }) });
+        document.getElementById('rest-name').value = ''; document.getElementById('rest-type').value = ''; document.getElementById('rest-cuisine').value = '';
+        showAlert('Restaurant created.', 'success'); await refreshDropdowns(); fetchRestaurants();
+    } catch(e) { showAlert('Could not create restaurant.\n\nTechnical details: ' + e.message, 'error'); }
+}
+
+async function updateRestaurant(id) {
+    try {
+        await api('/api/restaurants/' + id, { method: 'PUT', body: JSON.stringify({ restaurantName: document.getElementById('er-name-' + id).value, type: document.getElementById('er-type-' + id).value, cuisine: document.getElementById('er-cuisine-' + id).value, location: { id: parseInt(document.getElementById('er-loc-' + id).value) } }) });
+        showAlert('Restaurant updated.', 'success'); await refreshDropdowns(); fetchRestaurants();
+    } catch(e) { showAlert('Could not update restaurant.\n\nTechnical details: ' + e.message, 'error'); }
+}
+
+async function deleteRestaurant(id) {
+    if (!confirm('Delete this restaurant?')) return;
+    try { await api('/api/restaurants/' + id, { method: 'DELETE' }); showAlert('Restaurant deleted.', 'success'); await refreshDropdowns(); fetchRestaurants(); }
+    catch(e) { showAlert('Cannot delete — has linked entries. Delete those first.\n\nTechnical details: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// WANT TO TRY — get all, get by id, get by restaurant, CRUD
+// ============================================================
+async function fetchWantToTry() {
+    hideSearchInfo('wtt-search-info');
+    renderWantToTry(await api('/api/wanttotry') || []);
+}
+
+async function searchWantToTry() {
+    const id = document.getElementById('wtt-search-id').value;
+    const rId = document.getElementById('wtt-filter-rest').value;
+    if (id) {
+        const item = await api('/api/wanttotry/' + id);
+        renderWantToTry(item ? [item] : []);
+        showSearchInfo('wtt-search-info', item ? 'ID ' + id : 'Not found');
+    } else if (rId) {
+        renderWantToTry(await api('/api/wanttotry/by-restaurant/' + rId) || []);
+        showSearchInfo('wtt-search-info', 'Filtered by restaurant ID ' + rId);
+    } else { fetchWantToTry(); }
+}
+
+function renderWantToTry(data) {
+    document.getElementById('wtt-count').textContent = '(' + data.length + ')';
+    const tbody = document.getElementById('wtt-table');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">No records found.</td></tr>'; return; }
+    tbody.innerHTML = data.map(w => {
+        const rName = w.restaurant ? w.restaurant.restaurantName : 'N/A';
+        const rId = w.restaurant ? w.restaurant.id : '';
+        return `
+        <tr><td>${w.id}</td><td>${rName}</td>
+        <td class="actions-cell">
+            <button class="btn btn-edit" onclick="toggleEdit('edit-wtt-${w.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteWantToTry(${w.id})">Delete</button>
+        </td></tr>
+        <tr class="edit-row" id="edit-wtt-${w.id}"><td colspan="3"><div class="edit-form">
+            <select id="ew-rest-${w.id}">${allRestaurants.map(r => '<option value="'+r.id+'" '+(r.id==rId?'selected':'')+'>'+restLabel(r)+'</option>').join('')}</select>
+            <button class="btn btn-primary" onclick="updateWantToTry(${w.id})">Save</button>
+            <button class="btn btn-secondary" onclick="toggleEdit('edit-wtt-${w.id}')">Cancel</button>
+        </div></td></tr>`;
+    }).join('');
+}
+
+async function createWantToTry() {
+    try { await api('/api/wanttotry', { method: 'POST', body: JSON.stringify({ restaurant: { id: parseInt(document.getElementById('wtt-rest').value) } }) }); showAlert('Created.', 'success'); fetchWantToTry(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function updateWantToTry(id) {
+    try { await api('/api/wanttotry/' + id, { method: 'PUT', body: JSON.stringify({ restaurant: { id: parseInt(document.getElementById('ew-rest-' + id).value) } }) }); showAlert('Updated.', 'success'); fetchWantToTry(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function deleteWantToTry(id) {
+    if (!confirm('Delete?')) return;
+    try { await api('/api/wanttotry/' + id, { method: 'DELETE' }); showAlert('Deleted.', 'success'); fetchWantToTry(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// HAVE TRIED — get all, get by id, get by restaurant, CRUD
+// ============================================================
+async function fetchHaveTried() {
+    hideSearchInfo('ht-search-info');
+    renderHaveTried(await api('/api/havetried') || []);
+}
+
+async function searchHaveTried() {
+    const id = document.getElementById('ht-search-id').value;
+    const rId = document.getElementById('ht-filter-rest').value;
+    if (id) {
+        const item = await api('/api/havetried/' + id);
+        renderHaveTried(item ? [item] : []);
+        showSearchInfo('ht-search-info', item ? 'ID ' + id : 'Not found');
+    } else if (rId) {
+        renderHaveTried(await api('/api/havetried/by-restaurant/' + rId) || []);
+        showSearchInfo('ht-search-info', 'Filtered by restaurant ID ' + rId);
+    } else { fetchHaveTried(); }
+}
+
+function renderHaveTried(data) {
+    document.getElementById('ht-count').textContent = '(' + data.length + ')';
+    const tbody = document.getElementById('ht-table');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">No records found.</td></tr>'; return; }
+    tbody.innerHTML = data.map(h => {
+        const rName = h.restaurant ? h.restaurant.restaurantName : 'N/A';
+        const rId = h.restaurant ? h.restaurant.id : '';
+        return `
+        <tr><td>${h.id}</td><td>${rName}</td>
+        <td class="actions-cell">
+            <button class="btn btn-edit" onclick="toggleEdit('edit-ht-${h.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteHaveTried(${h.id})">Delete</button>
+        </td></tr>
+        <tr class="edit-row" id="edit-ht-${h.id}"><td colspan="3"><div class="edit-form">
+            <select id="eh-rest-${h.id}">${allRestaurants.map(r => '<option value="'+r.id+'" '+(r.id==rId?'selected':'')+'>'+restLabel(r)+'</option>').join('')}</select>
+            <button class="btn btn-primary" onclick="updateHaveTried(${h.id})">Save</button>
+            <button class="btn btn-secondary" onclick="toggleEdit('edit-ht-${h.id}')">Cancel</button>
+        </div></td></tr>`;
+    }).join('');
+}
+
+async function createHaveTried() {
+    try { await api('/api/havetried', { method: 'POST', body: JSON.stringify({ restaurant: { id: parseInt(document.getElementById('ht-rest').value) } }) }); showAlert('Created.', 'success'); await refreshDropdowns(); fetchHaveTried(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function updateHaveTried(id) {
+    try { await api('/api/havetried/' + id, { method: 'PUT', body: JSON.stringify({ restaurant: { id: parseInt(document.getElementById('eh-rest-' + id).value) } }) }); showAlert('Updated.', 'success'); await refreshDropdowns(); fetchHaveTried(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function deleteHaveTried(id) {
+    if (!confirm('Delete this entry and its related records?')) return;
+    try { await api('/api/havetried/' + id, { method: 'DELETE' }); showAlert('Deleted.', 'success'); await refreshDropdowns(); fetchHaveTried(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// RATINGS — get all, get by id, get by haveTried, CRUD
+// ============================================================
+async function fetchRatings() {
+    hideSearchInfo('rat-search-info');
+    renderRatings(await api('/api/ratings') || []);
+}
+
+async function searchRating() {
+    const id = document.getElementById('rat-search-id').value;
+    const htId = document.getElementById('rat-filter-ht').value;
+    if (id) {
+        const item = await api('/api/ratings/' + id);
+        renderRatings(item ? [item] : []);
+        showSearchInfo('rat-search-info', item ? 'ID ' + id : 'Not found');
+    } else if (htId) {
+        renderRatings(await api('/api/ratings/by-havetried/' + htId) || []);
+        showSearchInfo('rat-search-info', 'Filtered by Have Tried ID ' + htId);
+    } else { fetchRatings(); }
+}
+
+function renderRatings(data) {
+    document.getElementById('rat-count').textContent = '(' + data.length + ')';
+    const tbody = document.getElementById('rat-table');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No records found.</td></tr>'; return; }
+    tbody.innerHTML = data.map(r => {
+        const htId = r.haveTried ? r.haveTried.id : '';
+        const htName = r.haveTried && r.haveTried.restaurant ? r.haveTried.id + ' - ' + r.haveTried.restaurant.restaurantName : (htId || 'N/A');
+        return `
+        <tr><td>${r.id}</td><td>${htName}</td><td>${r.foodRating}</td><td>${r.vibeRating}</td><td>${r.ratingDescription || ''}</td>
+        <td class="actions-cell">
+            <button class="btn btn-edit" onclick="toggleEdit('edit-rat-${r.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteRating(${r.id})">Delete</button>
+        </td></tr>
+        <tr class="edit-row" id="edit-rat-${r.id}"><td colspan="6"><div class="edit-form">
+            <select id="erat-ht-${r.id}">${allHaveTried.map(h => '<option value="'+h.id+'" '+(h.id==htId?'selected':'')+'>'+htLabel(h)+'</option>').join('')}</select>
+            <input id="erat-food-${r.id}" type="number" value="${r.foodRating}" min="1" max="5" style="width:70px;">
+            <input id="erat-vibe-${r.id}" type="number" value="${r.vibeRating}" min="1" max="5" style="width:70px;">
+            <input id="erat-desc-${r.id}" value="${r.ratingDescription || ''}" placeholder="Description">
+            <button class="btn btn-primary" onclick="updateRating(${r.id})">Save</button>
+            <button class="btn btn-secondary" onclick="toggleEdit('edit-rat-${r.id}')">Cancel</button>
+        </div></td></tr>`;
+    }).join('');
+}
+
+async function createRating() {
+    try { await api('/api/ratings', { method: 'POST', body: JSON.stringify({ haveTried: { id: parseInt(document.getElementById('rat-ht').value) }, foodRating: parseInt(document.getElementById('rat-food').value), vibeRating: parseInt(document.getElementById('rat-vibe').value), ratingDescription: document.getElementById('rat-desc').value }) }); showAlert('Rating created.', 'success'); fetchRatings(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function updateRating(id) {
+    try { await api('/api/ratings/' + id, { method: 'PUT', body: JSON.stringify({ haveTried: { id: parseInt(document.getElementById('erat-ht-' + id).value) }, foodRating: parseInt(document.getElementById('erat-food-' + id).value), vibeRating: parseInt(document.getElementById('erat-vibe-' + id).value), ratingDescription: document.getElementById('erat-desc-' + id).value }) }); showAlert('Updated.', 'success'); fetchRatings(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function deleteRating(id) {
+    if (!confirm('Delete?')) return;
+    try { await api('/api/ratings/' + id, { method: 'DELETE' }); showAlert('Deleted.', 'success'); fetchRatings(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// EXPERIENCES — get all, get by id, get by haveTried, CRUD
+// ============================================================
+async function fetchExperiences() {
+    hideSearchInfo('exp-search-info');
+    renderExperiences(await api('/api/experiences') || []);
+}
+
+async function searchExperience() {
+    const id = document.getElementById('exp-search-id').value;
+    const htId = document.getElementById('exp-filter-ht').value;
+    if (id) {
+        const item = await api('/api/experiences/' + id);
+        renderExperiences(item ? [item] : []);
+        showSearchInfo('exp-search-info', item ? 'ID ' + id : 'Not found');
+    } else if (htId) {
+        renderExperiences(await api('/api/experiences/by-havetried/' + htId) || []);
+        showSearchInfo('exp-search-info', 'Filtered by Have Tried ID ' + htId);
+    } else { fetchExperiences(); }
+}
+
+function renderExperiences(data) {
+    document.getElementById('exp-count').textContent = '(' + data.length + ')';
+    const tbody = document.getElementById('exp-table');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No records found.</td></tr>'; return; }
+    tbody.innerHTML = data.map(e => {
+        const htId = e.haveTried ? e.haveTried.id : '';
+        const htName = e.haveTried && e.haveTried.restaurant ? e.haveTried.id + ' - ' + e.haveTried.restaurant.restaurantName : (htId || 'N/A');
+        return `
+        <tr><td>${e.id}</td><td>${htName}</td><td>${e.date || ''}</td><td>${e.description || ''}</td>
+        <td class="actions-cell">
+            <button class="btn btn-edit" onclick="toggleEdit('edit-exp-${e.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteExperience(${e.id})">Delete</button>
+        </td></tr>
+        <tr class="edit-row" id="edit-exp-${e.id}"><td colspan="5"><div class="edit-form">
+            <select id="eexp-ht-${e.id}">${allHaveTried.map(h => '<option value="'+h.id+'" '+(h.id==htId?'selected':'')+'>'+htLabel(h)+'</option>').join('')}</select>
+            <input id="eexp-date-${e.id}" type="date" value="${e.date || ''}">
+            <input id="eexp-desc-${e.id}" value="${e.description || ''}" placeholder="Description">
+            <button class="btn btn-primary" onclick="updateExperience(${e.id})">Save</button>
+            <button class="btn btn-secondary" onclick="toggleEdit('edit-exp-${e.id}')">Cancel</button>
+        </div></td></tr>`;
+    }).join('');
+}
+
+async function createExperience() {
+    try { await api('/api/experiences', { method: 'POST', body: JSON.stringify({ haveTried: { id: parseInt(document.getElementById('exp-ht').value) }, date: document.getElementById('exp-date').value, description: document.getElementById('exp-desc').value }) }); showAlert('Experience created.', 'success'); fetchExperiences(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function updateExperience(id) {
+    try { await api('/api/experiences/' + id, { method: 'PUT', body: JSON.stringify({ haveTried: { id: parseInt(document.getElementById('eexp-ht-' + id).value) }, date: document.getElementById('eexp-date-' + id).value, description: document.getElementById('eexp-desc-' + id).value }) }); showAlert('Updated.', 'success'); fetchExperiences(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function deleteExperience(id) {
+    if (!confirm('Delete?')) return;
+    try { await api('/api/experiences/' + id, { method: 'DELETE' }); showAlert('Deleted.', 'success'); fetchExperiences(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// DISHES — get all, get by id, get by haveTried, CRUD
+// ============================================================
+async function fetchDishes() {
+    hideSearchInfo('dish-search-info');
+    renderDishes(await api('/api/dishes') || []);
+}
+
+async function searchDish() {
+    const id = document.getElementById('dish-search-id').value;
+    const htId = document.getElementById('dish-filter-ht').value;
+    if (id) {
+        const item = await api('/api/dishes/' + id);
+        renderDishes(item ? [item] : []);
+        showSearchInfo('dish-search-info', item ? 'ID ' + id : 'Not found');
+    } else if (htId) {
+        renderDishes(await api('/api/dishes/by-have-tried/' + htId) || []);
+        showSearchInfo('dish-search-info', 'Filtered by Have Tried ID ' + htId);
+    } else { fetchDishes(); }
+}
+
+function renderDishes(data) {
+    document.getElementById('dish-count').textContent = '(' + data.length + ')';
+    const tbody = document.getElementById('dish-table');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No records found.</td></tr>'; return; }
+    tbody.innerHTML = data.map(d => {
+        const htId = d.haveTried ? d.haveTried.id : '';
+        const htName = d.haveTried && d.haveTried.restaurant ? d.haveTried.id + ' - ' + d.haveTried.restaurant.restaurantName : (htId || 'N/A');
+        return `
+        <tr><td>${d.id}</td><td>${htName}</td><td>${d.dishName || ''}</td><td>${d.foodDescription || ''}</td>
+        <td class="actions-cell">
+            <button class="btn btn-edit" onclick="toggleEdit('edit-dish-${d.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deleteDish(${d.id})">Delete</button>
+        </td></tr>
+        <tr class="edit-row" id="edit-dish-${d.id}"><td colspan="5"><div class="edit-form">
+            <select id="edish-ht-${d.id}">${allHaveTried.map(h => '<option value="'+h.id+'" '+(h.id==htId?'selected':'')+'>'+htLabel(h)+'</option>').join('')}</select>
+            <input id="edish-name-${d.id}" value="${d.dishName || ''}" placeholder="Dish Name">
+            <input id="edish-desc-${d.id}" value="${d.foodDescription || ''}" placeholder="Description">
+            <button class="btn btn-primary" onclick="updateDish(${d.id})">Save</button>
+            <button class="btn btn-secondary" onclick="toggleEdit('edit-dish-${d.id}')">Cancel</button>
+        </div></td></tr>`;
+    }).join('');
+}
+
+async function createDish() {
+    try { await api('/api/dishes', { method: 'POST', body: JSON.stringify({ haveTried: { id: parseInt(document.getElementById('dish-ht').value) }, dishName: document.getElementById('dish-name').value, foodDescription: document.getElementById('dish-desc').value }) }); showAlert('Dish created.', 'success'); fetchDishes(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function updateDish(id) {
+    try { await api('/api/dishes/' + id, { method: 'PUT', body: JSON.stringify({ haveTried: { id: parseInt(document.getElementById('edish-ht-' + id).value) }, dishName: document.getElementById('edish-name-' + id).value, foodDescription: document.getElementById('edish-desc-' + id).value }) }); showAlert('Updated.', 'success'); fetchDishes(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+async function deleteDish(id) {
+    if (!confirm('Delete?')) return;
+    try { await api('/api/dishes/' + id, { method: 'DELETE' }); showAlert('Deleted.', 'success'); fetchDishes(); }
+    catch(e) { showAlert('Error: ' + e.message, 'error'); }
+}
+</script>
+</body>
+</html>
