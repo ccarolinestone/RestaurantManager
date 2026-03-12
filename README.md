@@ -1,127 +1,126 @@
 # Restaurant Manager
 
-A Java Spring Boot REST API for tracking restaurants, dining experiences, ratings, and dishes — with a standalone web client.
+The Restaurant Manager project is used to keep track of restaurants that users have visited and restaurants that users are interested in visited. Users are able to add locations, information about restaurants, restaurants they would like to try, restaurants they have tried, dishes eaten at restaurants, and their general experiences that those restaurants.
 
-## Technology Stack
+## Technology Used In the Project
 
-- **Java 17** — core language
-- **Spring Boot 3.5** — framework with embedded Tomcat server
-- **Spring Data JPA / Hibernate 6** — ORM and data access
-- **MySQL 8** — relational database
-- **Maven** — build tool
-- **Jackson** — JSON serialization
-- **HTML / CSS / JavaScript** — standalone web client
-- **Fetch API** — client-side HTTP requests to REST controllers
+- **Java 17+** 
+- **Spring Boot 3.5.11** 
+- **Spring Data JPA**
+- **Tomcat**
+- **Spring Boot Starter Web**
+- **Spring Boot Starter Validation**
+- **Spring Boot Starter Test**
+- **MySQL 8+** 
+- **MySQL Workbench 8.0.46+**
+- **Maven 3.6+**
+- **Visual Studio Code**
+- **WSL2 2.4.12.0+**
+- **Ubuntu 22.04.5+**
+- **Spring Boot Maven Plugin**
+- **MySQL Connect J**
 
 ## Database
 
-7 tables: Location, Restaurant, WantToTry, HaveTried, Rating, Experience, Dish. Each table has 50 rows of seed data (350 total). Tables use primary keys, foreign keys, CHECK constraints, and CASCADE deletes.
+7 tables: Location, Restaurant, WantToTry, HaveTried, Rating, Experience, Dish. Each table has 50 rows of data.
 
 ## Architecture
 
 ```
-Web Client (index.html) → fetch() HTTP requests
+Web Client
         ↓
-REST Controllers (/api/...)
+REST Controllers
         ↓
 Service Layer
         ↓
-Business Layer
+Business Manager
         ↓
 JPA Repositories
         ↓
-MySQL Database
+restaurant_manager MySQL Database
 ```
-
-The web client is a standalone HTML file that communicates with the Spring Boot REST API using the JavaScript `fetch()` API. Every operation goes through the full layer chain — no layers are bypassed.
+The web client is an HTML file that uses Javascript's Fetch API.
 
 ## How to Run
 
 ### Prerequisites
-- Java 17+, Maven 3.8+, MySQL 8, a web browser (Chrome, Firefox, Edge, etc.)
+- Java 17+, Maven 3.6+, MySQL 8+, MySQL Workbench 8+, WSL2 2.4.12.0+, Ubuntu 22.04.5+, Visual Studio Code, and a web browser.
 
 ### Database Setup
+1. In your Visual Studio Code Ubuntu terminal, run:
 ```bash
-mysql -u root -p
+sudo service mysql start
 ```
-```sql
-CREATE DATABASE IF NOT EXISTS restaurant_manager;
-```
-Then load the schema and seed data:
-```bash
-mysql -u root -p restaurant_manager < src/main/resources/schema.sql
-mysql -u root -p restaurant_manager < src/main/resources/data.sql
-```
-Update `src/main/resources/application.properties` with your MySQL credentials.
+2. Update `src/main/resources/application.properties` with your MySQL Workbench connection's username and password
+
+3. Create restaurant_manager schema in MySQL Workbench
+        - In Schemas panel, right click and select the "Create Schema" button.
+        - Use "restaurant_manager" as the name of the schema
+
+4. Run the schema.sql and data.sql files in MySQL Workbench
+        - Double click the "restaurant_manager" label in the Schemas panel of MySQL Workbench to select the database
+        - Head back to Visual Studio Code, locate the schema.sql file in `src/main/resources/schema.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
+        - Head back to Visual Studio Code, locate the data.sql file in `src/main/resources/data.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
 
 ### Start the Server
+In the Visual Studio Ubuntu Terminal, run the following commands:
 ```bash
 mvn -DskipTests clean package
 mvn spring-boot:run
 ```
-The API runs on **http://localhost:8080**. All endpoints are under `/api/`.
+The API runs on **http://localhost:8080**.
 
-### Host and Run the Web Client (Project 3)
+## API Endpoints
 
-The web client is hosted by the Spring Boot embedded Tomcat server. The file `index.html` is located in `src/main/resources/static/`, which Spring Boot automatically serves as a static web page.
+- `/api/locations`
+- `/api/restaurants` 
+- `/api/wanttotry` 
+- `/api/havetried` 
+- `/api/ratings` 
+- `/api/experiences` 
+- `/api/dishes` 
 
-1. Make sure `index.html` is in `src/main/resources/static/`:
-   ```bash
-   ls src/main/resources/static/index.html
-   ```
-   If it is not there, copy it:
-   ```bash
-   cp index.html src/main/resources/static/index.html
-   ```
+### Host and Run the Web Client
+The web client is hosted locally through using Spring Boot and Tomcat. To view the web client's HTML file, it is called `index.html` and is located in `src/main/resources/static/`.
 
-2. Build and start the Spring Boot server:
+1. Build and start the Spring Boot server:
    ```bash
    mvn -DskipTests clean package
    mvn spring-boot:run
    ```
 
-3. Open your web browser and go to:
+2. Open your web browser and go to the following URL
    ```
    http://localhost:8080
    ```
 
-4. Click **"Fetch All"** to load all data from the API.
+3. Click **"Fetch All"** to load all data from the API.
 
-The web client is now hosted on the Spring Boot embedded Tomcat server and accessible as a web page at `http://localhost:8080`.
+The web client is hosted locally using Spring Boot and Tomcat. The web client can be found at http://localhost:8080. 
 
 ### How to Use the Web Client
-- **Tabs**: Click the tabs at the top (Locations, Restaurants, Want To Try, Have Tried, Ratings, Experiences, Dishes) to switch between entities.
-- **View all records**: Click "Fetch All" or "Show All" on any tab to retrieve all records for that entity.
-- **Search by ID**: Enter an ID number in the "Search by ID" field and click "Search" to retrieve a single record.
-- **Filter by parent**: Use the filter dropdown (e.g., "Filter by Location", "Filter by Restaurant", "Filter by Have Tried") and click "Search" to retrieve a subset of records.
-- **Create**: Fill out the "Add New" form at the top of each tab and click "Create".
-- **Edit**: Click the "Edit" button on any row, modify the values in the inline edit form, and click "Save".
-- **Delete**: Click the "Delete" button on any row and confirm the deletion.
-- **Clear**: Click "Clear Tables" to clear all displayed data from the page.
+- **Tabs**: There are 7 tabs called: Locations, Restaurants, Want To Try, Have Tried, Ratings, Experiences, Dishes. By selecting each tab, you can view all of its data entries. 
+- **To View all Entries**: Click the "Fetch All" button at the top of the page. Addtionally, the "Show ALl" button on each page will show all of the entries in that tab. 
+- **To Search by ID**: Enter an ID number into the "Search by ID" box and select the "Search" button to find a specific entry.
+- **Filter by Specific Fields**: Select a value from the filter dropdown and select the "Search" button to find a specific group of entries.
+- **To Create an Entry**: Fill out the "Add New" box at the top of each tab and select the "Create" button.
+- **To Edit an Entry**: Select the "Edit" button on any entry and then select the "Save" button. 
+- **To Delete an Entry**: Select the "Delete" button on an entry and confirm the deletion.
+- **To Clear All Data**: Select "Clear Tables" at the top of the page.
 
-### CORS Configuration
-The file `src/main/java/com/example/restaurant/config/CorsConfig.java` enables cross-origin requests so the web client can communicate with the REST API.
-
-### Run the Console Test Client (Project 2)
-With the server running in one terminal, open a second terminal:
+### Run the Service Console Client To Test the Service Layer
+Run the following commands in one of the Visual Studio Code Ubuntu terminals:
+   ```bash
+   mvn -DskipTests clean package
+   mvn spring-boot:run
+   ```
+In another Visual Studio Code Ubuntu Terminal, run the following command:
 ```bash
 mvn -q exec:java -Dexec.mainClass="com.example.restaurant.app.ServiceConsoleClient" -Dexec.classpathScope=runtime
 ```
-This demonstrates full Create, Read, Update, and Delete operations through the REST API.
+This test shows CRUD operations.
 
-## API Endpoints
-
-Each entity supports GET, GET/{id}, POST, PUT/{id}, DELETE/{id}:
-
-- `/api/locations`
-- `/api/restaurants` (also: `/api/restaurants/by-location/{locationId}`)
-- `/api/wanttotry` (also: `/api/wanttotry/by-restaurant/{restaurantId}`)
-- `/api/havetried` (also: `/api/havetried/by-restaurant/{restaurantId}`)
-- `/api/ratings` (also: `/api/ratings/by-havetried/{haveTriedId}`)
-- `/api/experiences` (also: `/api/experiences/by-havetried/{haveTriedId}`)
-- `/api/dishes` (also: `/api/dishes/by-have-tried/{haveTriedId}`)
-
-## Getting Started
+## Learn More About the Tools Used In This Project
 
 ### Reference Documentation
 For further reference, please consider the following sections:
