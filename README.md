@@ -54,13 +54,13 @@ sudo service mysql start
 2. Update `src/main/resources/application.properties` with your MySQL Workbench connection's username and password
 
 3. Create restaurant_manager schema in MySQL Workbench
-        - In Schemas panel, right click and select the "Create Schema" button.
-        - Use "restaurant_manager" as the name of the schema
+- In Schemas panel, right click and select the "Create Schema" button.
+- Use "restaurant_manager" as the name of the schema
 
 4. Run the schema.sql and data.sql files in MySQL Workbench
-        - Double click the "restaurant_manager" label in the Schemas panel of MySQL Workbench to select the database
-        - Head back to Visual Studio Code, locate the schema.sql file in `src/main/resources/schema.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
-        - Head back to Visual Studio Code, locate the data.sql file in `src/main/resources/data.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
+- Double click the "restaurant_manager" label in the Schemas panel of MySQL Workbench to select the database
+- Head back to Visual Studio Code, locate the schema.sql file in `src/main/resources/schema.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
+- Head back to Visual Studio Code, locate the data.sql file in `src/main/resources/data.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
 
 ### Start the Server
 In the Visual Studio Ubuntu Terminal, run the following commands:
