@@ -1,5 +1,6 @@
 package com.example.restaurant.service;
 
+import com.example.restaurant.model.Location;
 import com.example.restaurant.business.BusinessManager;
 import com.example.restaurant.model.Restaurant;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,10 @@ public class RestaurantService {
         if (existing == null) return Optional.empty();
 
         if (updates.getRestaurantName() != null) existing.setRestaurantName(updates.getRestaurantName());
-        if (updates.getLocation() != null) existing.setLocation(updates.getLocation());
+        if (updates.getLocation() != null && updates.getLocation().getId() != null) {
+            Location fullLocation = bm.findLocationById(updates.getLocation().getId());
+            if (fullLocation != null) existing.setLocation(fullLocation);
+        }
         if (updates.getType() != null) existing.setType(updates.getType());
         if (updates.getCuisine() != null) existing.setCuisine(updates.getCuisine());
 

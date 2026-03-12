@@ -62,9 +62,9 @@ CREATE TABLE IF NOT EXISTS dish (
 );
 
 -- Indexes (optional)
-CREATE INDEX IF NOT EXISTS idx_restaurant_location ON restaurant(location_id);
-CREATE INDEX IF NOT EXISTS idx_want_to_try_restaurant ON want_to_try(restaurant_id);
-CREATE INDEX IF NOT EXISTS idx_have_tried_restaurant ON have_tried(restaurant_id);
-CREATE INDEX IF NOT EXISTS idx_rating_have_tried ON rating(have_tried_id);
-CREATE INDEX IF NOT EXISTS idx_experience_have_tried ON experience(have_tried_id);
-CREATE INDEX IF NOT EXISTS idx_dish_have_tried ON dish(have_tried_id);
+CREATE INDEX idx_restaurant_location ON restaurant(location_id);
+CREATE INDEX idx_want_to_try_restaurant ON want_to_try(restaurant_id);
+CREATE INDEX idx_have_tried_restaurant ON have_tried(restaurant_id);
+CREATE INDEX idx_rating_have_tried ON rating(have_tried_id);
+CREATE INDEX idx_experience_have_tried ON experience(have_tried_id);
+CREATE INDEX idx_dish_have_tried ON dish(have_tried_id);
