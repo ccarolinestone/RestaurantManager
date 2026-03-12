@@ -47,17 +47,17 @@ The web client is an HTML file that uses Javascript's Fetch API.
 - Java 17+, Maven 3.6+, MySQL 8+, MySQL Workbench 8+, WSL2 2.4.12.0+, Ubuntu 22.04.5+, Visual Studio Code, and a web browser.
 
 ### Database Setup
-1. In your Visual Studio Code Ubuntu terminal, run:
+**1. In your Visual Studio Code Ubuntu terminal, run:**
 ```bash
 sudo service mysql start
 ```
-2. Update `src/main/resources/application.properties` with your MySQL Workbench connection's username and password
+**2. Update `src/main/resources/application.properties` with your MySQL Workbench connection's username and password**
 
-3. Create restaurant_manager schema in MySQL Workbench
+**3. Create restaurant_manager schema in MySQL Workbench**
 - In Schemas panel, right click and select the "Create Schema" button.
 - Use "restaurant_manager" as the name of the schema
 
-4. Run the schema.sql and data.sql files in MySQL Workbench
+**4. Run the schema.sql and data.sql files in MySQL Workbench**
 - Double click the "restaurant_manager" label in the Schemas panel of MySQL Workbench to select the database
 - Head back to Visual Studio Code, locate the schema.sql file in `src/main/resources/schema.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
 - Head back to Visual Studio Code, locate the data.sql file in `src/main/resources/data.sql`. Copy and paste the contents of this file into a SQL tab in MySQL Workbench. Run this file.
@@ -83,18 +83,18 @@ The API runs on **http://localhost:8080**.
 ### Host and Run the Web Client
 The web client is hosted locally through using Spring Boot and Tomcat. To view the web client's HTML file, it is called `index.html` and is located in `src/main/resources/static/`.
 
-1. Build and start the Spring Boot server:
+**1. Build and start the Spring Boot server:**
    ```bash
    mvn -DskipTests clean package
    mvn spring-boot:run
    ```
 
-2. Open your web browser and go to the following URL
+**2. Open your web browser and go to the following URL**
    ```
    http://localhost:8080
    ```
 
-3. Click **"Fetch All"** to load all data from the API.
+**3. Click **"Fetch All"** to load all data from the API.**
 
 The web client is hosted locally using Spring Boot and Tomcat. The web client can be found at http://localhost:8080. 
 
