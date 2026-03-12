@@ -100,7 +100,7 @@ The web client is hosted locally using Spring Boot and Tomcat. The web client ca
 
 ### How to Use the Web Client
 - **Tabs**: There are 7 tabs called: Locations, Restaurants, Want To Try, Have Tried, Ratings, Experiences, Dishes. By selecting each tab, you can view all of its data entries. 
-- **To View all Entries**: Click the "Fetch All" button at the top of the page. Addtionally, the "Show ALl" button on each page will show all of the entries in that tab. 
+- **To View all Entries**: Click the "Fetch All" button at the top of the page. Addtionally, the "Show All" button on each page will show all of the entries in that tab. 
 - **To Search by ID**: Enter an ID number into the "Search by ID" box and select the "Search" button to find a specific entry.
 - **Filter by Specific Fields**: Select a value from the filter dropdown and select the "Search" button to find a specific group of entries.
 - **To Create an Entry**: Fill out the "Add New" box at the top of each tab and select the "Create" button.
